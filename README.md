@@ -1,16 +1,20 @@
 
 # 🧩 WaStickers Extractor GUI
 
-Aplicación de escritorio en C# (.NET 6) con WinForms para extraer imágenes `.webp` desde archivos `.wastickers` (internamente archivos `.zip` de stickers). Ideal para recuperar stickers de WhatsApp exportados.
+Aplicación de escritorio en C# (.NET 9) con WinForms para extraer y convertir imágenes `.webp` desde archivos `.wastickers` (internamente archivos `.zip` de stickers) al formato `.png`. Ideal para recuperar stickers de WhatsApp exportados.
 
 ---
 
 ## ✨ Funcionalidades
 
-- Selecciona un archivo `.wastickers` desde tu PC.
-- Se crea automáticamente una carpeta con el nombre del archivo.
-- Se extraen todas las imágenes `.webp` (stickers) dentro de esa carpeta.
-- Notificación visual al finalizar.
+- Selección de archivo `.wastickers` desde el sistema de archivos.
+- Elección de carpeta de destino con creación automática de subcarpeta.
+- Extracción de imágenes `.webp` desde el archivo `.wastickers`.
+- Conversión automática de `.webp` a `.png` con Magick.NET.
+- Eliminación de los archivos `.webp` después de la conversión.
+- Visualización de progreso con puntos (`.`) por cada archivo procesado.
+- Mensaje "Cargando..." durante el proceso de extracción.
+- Apertura automática de la carpeta de destino al finalizar.
 - Interfaz moderna con tema oscuro tipo Visual Studio Code.
 
 ---
@@ -24,14 +28,16 @@ Aplicación de escritorio en C# (.NET 6) con WinForms para extraer imágenes `.w
   - `System.IO.Compression` (para extraer archivos .zip)
   - `System.Windows.Forms` (interfaz gráfica)
   - `System.Drawing` (visualización y estilos)
+  - `System.Diagnostics` (para abrir carpeta)
+  - `Magick.NET-Q8-AnyCPU` (para conversión de imágenes)
 
 ---
 
 ## 💻 Requisitos
 
 - Sistema: Windows 64-bit
-- No requiere instalación de .NET (versión *self-contained*)
-- Peso aprox: 107 MB
+- .NET 9 instalado (o usar versión *self-contained*)
+- Tamaño aprox del `.exe`: 107 MB
 
 ---
 
@@ -56,6 +62,11 @@ dotnet run
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
+Para reducir el peso:
+```bash
+dotnet publish -c Release -r win-x64 --self-contained false
+```
+
 ---
 
 ## 🎨 Tema Oscuro Aplicado
@@ -66,6 +77,20 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 
 ---
 
+## 📦 Commit final sugerido
+
+```txt
+feat: extracción, conversión a PNG y apertura de carpeta final
+
+- Se implementa conversión automática de .webp a .png usando Magick.NET.
+- Los archivos .webp se eliminan tras la conversión para mantener limpia la carpeta.
+- Se muestra una barra de progreso con puntos (.) por cada archivo procesado.
+- Se abre automáticamente la carpeta destino con explorer.exe al finalizar.
+- Se mantiene un mensaje "Cargando..." mientras el proceso está activo.
+```
+
+---
+
 ## 🧾 Créditos
 
-Desarrollado por **Jhon** con ❤️ usando Visual Studio Code.
+Desarrollado con entusiasmo por **Jhon** 😄
