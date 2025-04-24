@@ -3,7 +3,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
-using ImageMagick;
 partial class Form1
 {
     /// <summary>
@@ -187,23 +186,17 @@ private void BtnSeleccionarCarpeta_Click(object sender, EventArgs e)
                     {
                         if (entry.FullName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
                         {
-                            string destinoWebp = Path.Combine(carpetaDestino, entry.Name);
-                            entry.ExtractToFile(destinoWebp, overwrite: true);
+                            string destino = Path.Combine(carpetaDestino, entry.Name);
+                            entry.ExtractToFile(destino, overwrite: true);
 
-                            // Convertir a PNG
-                            string destinoPng = Path.ChangeExtension(destinoWebp, ".png");
-                            using var image = new MagickImage(destinoWebp);
-                            image.Format = MagickFormat.Png;
-                            image.Write(destinoPng);
-                            File.Delete(destinoWebp);
                             contador++;
 
-                            Invoke(() => {
-                                lblRutaDestino.Text = $"Procesando archivos: \n{new string('.', contador)}";
+                            Invoke(() =>
+                            {
+                                lblRutaDestino.Text = $"Procesando archivos:\n{new string('.', contador)}";
                             });
                         }
                     }
-                    
                 }
 
                 Invoke(() =>
