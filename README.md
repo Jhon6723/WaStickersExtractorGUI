@@ -18,7 +18,7 @@ Aplicación de escritorio en C# (.NET 6) con WinForms para extraer imágenes `.w
 ## 🛠️ Tecnologías Usadas
 
 - Lenguaje: C#
-- Framework: .NET 6
+- Framework: .NET 9
 - Interfaz: Windows Forms (WinForms)
 - Librerías:
   - `System.IO.Compression` (para extraer archivos .zip)
