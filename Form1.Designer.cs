@@ -1,7 +1,9 @@
 ﻿namespace WaStickersExtractorGUI;
+
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
-
+using ImageMagick;
 partial class Form1
 {
     /// <summary>
@@ -29,6 +31,7 @@ partial class Form1
     ///  Required method for Designer support - do not modify
     ///  the contents of this method with the code editor.
     /// </summary>
+    
     private string archivoSeleccionado = "";
     private string carpetaDestino = "";
     FlowLayoutPanel panel = new FlowLayoutPanel();
@@ -128,27 +131,44 @@ partial class Form1
     {
         using OpenFileDialog ofd = new OpenFileDialog();
         ofd.Filter = "Archivo WaStickers (*.wastickers)|*.wastickers";
-        if (ofd.ShowDialog() == DialogResult.OK)
+        if (ofd.ShowDialog() == DialogResult.OK){
             archivoSeleccionado = ofd.FileName;
-    }
-
-    private void BtnSeleccionarCarpeta_Click(object sender, EventArgs e)
-    {
-        MessageBox.Show($"Primero selecciona una carpeta para guardar.");
-        using FolderBrowserDialog fbd = new FolderBrowserDialog();
-        if (!string.IsNullOrEmpty(archivoSeleccionado) && fbd.ShowDialog() == DialogResult.OK)
-        {
-            string basePath = Path.GetDirectoryName(archivoSeleccionado)!;
-            string nombreCarpeta = Path.GetFileNameWithoutExtension(archivoSeleccionado) + "_stickers";
-            carpetaDestino = Path.Combine(basePath, nombreCarpeta);
-            MessageBox.Show($"Carpeta creada automáticamente:\n{carpetaDestino}");
-            Directory.CreateDirectory(carpetaDestino);
+            lblRutaDestino.Text = $"Archivo seleccionado: {archivoSeleccionado}";
         }
-        lblRutaDestino.Text = "Error al seleccionar la carpeta";
+            
     }
 
+private void BtnSeleccionarCarpeta_Click(object sender, EventArgs e)
+{
+    if (string.IsNullOrEmpty(archivoSeleccionado))
+    {
+        MessageBox.Show("Primero debes seleccionar un archivo .wastickers.");
+        return;
+    }
 
-    private void BtnExtraer_Click(object sender, EventArgs e)
+    using FolderBrowserDialog fbd = new FolderBrowserDialog();
+    if (fbd.ShowDialog() == DialogResult.OK)
+    {
+        try
+        {
+            string nombreCarpeta = Path.GetFileNameWithoutExtension(archivoSeleccionado) + "_stickers";
+            carpetaDestino = Path.Combine(fbd.SelectedPath, nombreCarpeta);
+
+            Directory.CreateDirectory(carpetaDestino);
+            lblRutaDestino.Text = $"Carpeta creada: {carpetaDestino}";
+            lblRutaDestino.ForeColor = Color.DarkGreen;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error al crear la carpeta:\n{ex.Message}");
+        }
+    }
+}
+
+
+
+
+    private async void BtnExtraer_Click(object sender, EventArgs e)
     {
         if (string.IsNullOrEmpty(archivoSeleccionado) || string.IsNullOrEmpty(carpetaDestino))
         {
@@ -156,30 +176,53 @@ partial class Form1
             return;
         }
 
-        try
+        await Task.Run(() =>
         {
-            using (ZipArchive archive = ZipFile.OpenRead(archivoSeleccionado))
+            try
             {
-                foreach (ZipArchiveEntry entry in archive.Entries)
+                using (ZipArchive archive = ZipFile.OpenRead(archivoSeleccionado))
                 {
-                    if (entry.FullName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+                    int contador = 0;
+                    foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        string destino = Path.Combine(carpetaDestino, entry.Name);
-                        entry.ExtractToFile(destino, overwrite: true);
+                        if (entry.FullName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string destinoWebp = Path.Combine(carpetaDestino, entry.Name);
+                            entry.ExtractToFile(destinoWebp, overwrite: true);
+
+                            // Convertir a PNG
+                            string destinoPng = Path.ChangeExtension(destinoWebp, ".png");
+                            using var image = new MagickImage(destinoWebp);
+                            image.Format = MagickFormat.Png;
+                            image.Write(destinoPng);
+                            File.Delete(destinoWebp);
+                            contador++;
+
+                            Invoke(() => {
+                                lblRutaDestino.Text = $"Procesando archivos: \n{new string('.', contador)}";
+                            });
+                        }
                     }
-                    lblRutaDestino.Text = $"Destino: {carpetaDestino}";
-                    lblRutaDestino.ForeColor = Color.DarkGreen;
-
+                    
                 }
-            }
 
-            MessageBox.Show("¡Extracción completada con éxito!");
-        }
-        catch (Exception ex)
-        {
-            lblRutaDestino.Text = $"Ocurrió un error al extraer: {ex.Message}";
-            MessageBox.Show($"Ocurrió un error al extraer: {ex.Message}");
-        }
+                Invoke(() =>
+                {
+                    lblRutaDestino.ForeColor = Color.DarkGreen;
+                    lblRutaDestino.Text = $"¡Extracción completada con éxito!\nDestino: {carpetaDestino}";
+                    Process.Start("explorer.exe", carpetaDestino);
+                });
+            }
+            catch (Exception ex)
+            {
+                Invoke(() =>
+                {
+                    lblRutaDestino.Text = $"Error al extraer: {ex.Message}";
+                    MessageBox.Show($"Ocurrió un error: {ex.Message}");
+                });
+            }
+        });
+
     }
     private void Form1_Load(object sender, EventArgs e)
     {
